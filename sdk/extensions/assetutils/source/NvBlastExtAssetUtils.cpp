@@ -31,7 +31,7 @@
 #include "NvBlastIndexFns.h"
 #include "NvBlastMemory.h"
 #include "NvBlastGlobals.h"
-#include "math.h"
+#include "cmath"
 
 using namespace Nv::Blast;
 

@@ -1151,7 +1151,6 @@ void FbxFileWriter::generateSmoothingGroups(fbxsdk::FbxMesh* mesh, FbxSkin* skin
 	smElement->SetReferenceMode(FbxGeometryElement::eDirect);
 
 	FbxVector4* cpList = mesh->GetControlPoints();
-	const int cpCount  = mesh->GetControlPointsCount();
 
 	const int triangleCount = mesh->GetPolygonCount();
 	const int cornerCount   = triangleCount * 3;
@@ -1412,7 +1411,6 @@ void FbxFileWriter::removeDuplicateControlPoints(fbxsdk::FbxMesh* mesh, FbxSkin*
 		}
 	}
 
-	const int originalCPCount = cpCount;
 	const int newCPCount      = int(uniqueCPs.size());
 
 	if (newCPCount == cpCount)

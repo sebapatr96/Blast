@@ -361,10 +361,10 @@ Mesh* getNoisyCuttingBoxPair(const physx::PxVec3& point, const physx::PxVec3& no
 	getTangents(lNormal, t1, t2);
 	float sz = 2.f * jaggedPlaneSize;
 	uint32_t resolutionX =
-	    std::max(1u, (uint32_t)std::roundf(sz * std::abs(t1.x) * resolution.x + sz * std::abs(t1.y) * resolution.y +
+	    std::max(1u, (uint32_t)roundf(sz * std::abs(t1.x) * resolution.x + sz * std::abs(t1.y) * resolution.y +
 	                                       sz * std::abs(t1.z) * resolution.z));
 	uint32_t resolutionY =
-	    std::max(1u, (uint32_t)std::roundf(sz * std::abs(t2.x) * resolution.x + sz * std::abs(t2.y) * resolution.y +
+	    std::max(1u, (uint32_t)roundf(sz * std::abs(t2.x) * resolution.x + sz * std::abs(t2.y) * resolution.y +
 	                                       sz * std::abs(t2.z) * resolution.z));
 
 	PlaneStepper stepper(normal, point, jaggedPlaneSize, jaggedPlaneSize, resolutionX, resolutionY);
@@ -547,7 +547,7 @@ void buildCuttingConeFaces(const CutoutConfiguration& conf, const std::vector<st
 		return;
 	}
 	std::map<physx::PxVec3, std::pair<uint32_t, std::vector<physx::PxVec3> >, CmpVec> newCutoutPoints;
-	uint32_t resH = std::max((uint32_t)std::roundf((heightBot + heightTop) / conf.noise.samplingInterval.z), 1u);
+	uint32_t resH = std::max((uint32_t)roundf((heightBot + heightTop) / conf.noise.samplingInterval.z), 1u);
 
 	// generate noisy faces
 	SimplexNoise nEval(conf.noise.amplitude, conf.noise.frequency, conf.noise.octaveNumber, seed);
@@ -764,7 +764,7 @@ Mesh* getNoisyCuttingCone(const std::vector<physx::PxVec3>& points, const std::s
 		auto vec = (points[(i + 1) % pointCount] - points[i]);
 		resP += (uint32_t)(std::abs(vec.x) / samplingInterval.x + std::abs(vec.y) / samplingInterval.y);
 	}
-	uint32_t resH = std::max((uint32_t)std::roundf((heightBot + heightTop) / samplingInterval.z), 1u);
+	uint32_t resH = std::max((uint32_t)roundf((heightBot + heightTop) / samplingInterval.z), 1u);
 
 	std::vector<Vertex> positions;
 	positions.reserve((resH + 1) * (resP + 1));

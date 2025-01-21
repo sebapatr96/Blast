@@ -57,7 +57,7 @@ DamagePattern* PatternGeneratorImpl::generateUniformPattern(const UniformPattern
 
 		if (desc->radiusDistr != 1.0f)
 		{
-			rd = std::pow(rd / desc->radiusMax, desc->radiusDistr) * desc->radiusMax;
+			rd = pow(rd / desc->radiusMax, desc->radiusDistr) * desc->radiusMax;
 		}
 
 		float phi = desc->RNG() * 6.28f;

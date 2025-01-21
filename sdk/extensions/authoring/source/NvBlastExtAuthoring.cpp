@@ -356,13 +356,13 @@ AuthoringResult* NvBlastExtAuthoringProcessFracture(FractureTool& fTool, BlastBo
 		chunkGeometry[i] = nullptr;
 	}
 
-	float maxX = INT32_MIN;
-	float maxY = INT32_MIN;
-	float maxZ = INT32_MIN;
+	float maxX = (float)INT32_MIN;
+	float maxY = (float)INT32_MIN;
+	float maxZ = (float)INT32_MIN;
 
-	float minX = INT32_MAX;
-	float minY = INT32_MAX;
-	float minZ = INT32_MAX;
+	float minX = (float)INT32_MAX;
+	float minY = (float)INT32_MAX;
+	float minZ = (float)INT32_MAX;
 
 	for (uint32_t i = 0; i < bondCount; i++)
 	{

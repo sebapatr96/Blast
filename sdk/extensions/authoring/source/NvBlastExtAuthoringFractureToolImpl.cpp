@@ -391,7 +391,7 @@ void VoronoiSitesGeneratorImpl::radialPattern(const NvcVec3& center, const NvcVe
 			float angVars = mRnd->getRandomValue() * variability + (1.0f - 0.5f * variability);
 			float radVars = mRnd->getRandomValue() * variability + (1.0f - 0.5f * variability);
 
-			NvcVec3 nPos = fromPxShared(std::cos(cAngle * angVars) * t1 + std::sin(cAngle * angVars) * t2) * cRadius * radVars + center;
+			NvcVec3 nPos = fromPxShared(cos(cAngle * angVars) * t1 + sin(cAngle * angVars) * t2) * cRadius * radVars + center;
 			mGeneratedSites.push_back(nPos);
 			cAngle += angleStep;
 		}

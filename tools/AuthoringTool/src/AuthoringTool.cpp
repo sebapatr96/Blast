@@ -58,6 +58,7 @@
 #include <iosfwd>
 #include <Windows.h>
 #include "tclap/CmdLine.h"
+#include <random>
 
 
 //enable/disable memory leak detection
@@ -539,9 +540,16 @@ int main(int argc, const char* const* argv)
 
 	fTool->setSourceMesh(mesh);
 
+	std::random_device rd;
+	// Create a random number generator with a seed
+	std::mt19937 gen(rd());
+	// Define the range [0, 1000]
+	std::uniform_int_distribution<> dist(0, 1000);
+	int random_number = dist(gen);
 
 	SimpleRandomGenerator rng;
-	rng.seed(0);
+	rng.seed(random_number);
+
 	Nv::Blast::VoronoiSitesGenerator* voronoiSitesGenerator = NvBlastExtAuthoringCreateVoronoiSitesGenerator(mesh, &rng);
 	if (voronoiSitesGenerator == nullptr)
 	{

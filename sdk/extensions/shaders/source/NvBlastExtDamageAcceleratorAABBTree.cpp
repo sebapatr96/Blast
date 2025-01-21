@@ -354,7 +354,7 @@ void ExtDamageAcceleratorAABBTree::fillDebugBuffer(const Node& node, int current
 			for (int d = 1; d < 8; d <<= 1)
 			{
 				auto flip = [](int x, int k) { return ((x >> k) & 1) * 2.f - 1.f; };
-				const float s = std::pow(0.99f, currentDepth);
+				const float s = pow(0.99f, currentDepth);
 				PxVec3 p0 = center + s * extents.multiply(PxVec3(flip(v, 0), flip(v, 1), flip(v, 2)));
 				PxVec3 p1 = center + s * extents.multiply(PxVec3(flip(v^d, 0), flip(v^d, 1), flip(v^d, 2)));
 				m_debugLineBuffer.pushBack(Nv::Blast::DebugLine(
