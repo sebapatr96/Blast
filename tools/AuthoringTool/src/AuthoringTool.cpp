@@ -25,7 +25,6 @@
 //
 // Copyright (c) 2016-2020 NVIDIA Corporation. All rights reserved.
 
-
 #include "PxPhysicsAPI.h"
 #include "PsFileBuffer.h"
 #include "NvBlast.h"
@@ -60,31 +59,30 @@
 #include "tclap/CmdLine.h"
 #include <random>
 
-
-//enable/disable memory leak detection
-//#define _CRTDBG_MAP_ALLOC 
+// enable/disable memory leak detection
+// #define _CRTDBG_MAP_ALLOC
 #ifdef _CRTDBG_MAP_ALLOC
-#include <stdlib.h> 
-#include <crtdbg.h> 
+#include <stdlib.h>
+#include <crtdbg.h>
 #endif
 
-using physx::PxVec3;
 using physx::PxVec2;
+using physx::PxVec3;
 
 #define DEFAULT_ASSET_NAME "AuthoringTest"
 
 using namespace Nv::Blast;
 
-physx::PxFoundation*	gFoundation = nullptr;
-physx::PxPhysics*		gPhysics = nullptr;
-physx::PxCooking*		gCooking = nullptr;
+physx::PxFoundation *gFoundation = nullptr;
+physx::PxPhysics *gPhysics = nullptr;
+physx::PxCooking *gCooking = nullptr;
 
 struct TCLAPint3
 {
 	int32_t x, y, z;
-	TCLAPint3(int32_t x, int32_t y, int32_t z) :x(x), y(y), z(z){};
-	TCLAPint3() :x(0), y(0), z(0){};
-	TCLAPint3& operator=(const std::string &inp)
+	TCLAPint3(int32_t x, int32_t y, int32_t z) : x(x), y(y), z(z) {};
+	TCLAPint3() : x(0), y(0), z(0) {};
+	TCLAPint3 &operator=(const std::string &inp)
 	{
 		std::istringstream stream(inp);
 		if (!(stream >> x >> y >> z))
@@ -96,9 +94,9 @@ struct TCLAPint3
 struct TCLAPfloat3
 {
 	float x, y, z;
-	TCLAPfloat3(float x, float y, float z) :x(x), y(y), z(z) {};
-	TCLAPfloat3() :x(0), y(0), z(0) {};
-	TCLAPfloat3& operator=(const std::string &inp)
+	TCLAPfloat3(float x, float y, float z) : x(x), y(y), z(z) {};
+	TCLAPfloat3() : x(0), y(0), z(0) {};
+	TCLAPfloat3 &operator=(const std::string &inp)
 	{
 		std::istringstream stream(inp);
 		if (!(stream >> x >> y >> z))
@@ -112,23 +110,26 @@ struct TCLAPfloat3
 	}
 	operator physx::PxVec3()
 	{
-		return { x, y, z };
+		return {x, y, z};
 	}
 };
 
-namespace TCLAP {
-	template<>
-	struct ArgTraits<TCLAPint3> {
+namespace TCLAP
+{
+	template <>
+	struct ArgTraits<TCLAPint3>
+	{
 		typedef StringLike ValueCategory;
 	};
 
-	template<>
-	struct ArgTraits<TCLAPfloat3> {
+	template <>
+	struct ArgTraits<TCLAPfloat3>
+	{
 		typedef StringLike ValueCategory;
 	};
 }
 
-bool isDirectoryExist(const std::string& path)
+bool isDirectoryExist(const std::string &path)
 {
 	DWORD attributes = GetFileAttributesA(path.c_str());
 	if ((attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -138,7 +139,7 @@ bool isDirectoryExist(const std::string& path)
 	return false;
 }
 
-bool isFileExist(const std::string& path)
+bool isFileExist(const std::string &path)
 {
 	DWORD attributes = GetFileAttributesA(path.c_str());
 	if ((attributes != INVALID_FILE_ATTRIBUTES) && !(attributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -148,7 +149,7 @@ bool isFileExist(const std::string& path)
 	return false;
 }
 
-bool mkDirRecursively(const std::string& path)
+bool mkDirRecursively(const std::string &path)
 {
 	if (isDirectoryExist(path))
 	{
@@ -166,34 +167,34 @@ bool mkDirRecursively(const std::string& path)
 
 unsigned char *LoadBitmapFile(const char *filename, BITMAPINFOHEADER *bitmapInfoHeader)
 {
-	FILE *filePtr; //our file pointer
-	BITMAPFILEHEADER bitmapFileHeader; //our bitmap file header
-	unsigned char *bitmapImage;  //store image data
-	//int imageIdx = 0;  //image index counter
-	unsigned char tempRGB;  //our swap variable
+	FILE *filePtr;					   // our file pointer
+	BITMAPFILEHEADER bitmapFileHeader; // our bitmap file header
+	unsigned char *bitmapImage;		   // store image data
+	// int imageIdx = 0;  //image index counter
+	unsigned char tempRGB; // our swap variable
 
-							//open filename in read binary mode
+	// open filename in read binary mode
 	filePtr = fopen(filename, "rb");
 	if (filePtr == NULL)
 		return NULL;
 
-	//read the bitmap file header
+	// read the bitmap file header
 	fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, filePtr);
 
-	//verify that this is a bmp file by check bitmap id
+	// verify that this is a bmp file by check bitmap id
 	if (bitmapFileHeader.bfType != 0x4D42)
 	{
 		fclose(filePtr);
 		return NULL;
 	}
 
-	//read the bitmap info header
+	// read the bitmap info header
 	fread(bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, filePtr); // small edit. forgot to add the closing bracket at sizeof
 
-																   //move file point to the begging of bitmap data
+	// move file point to the begging of bitmap data
 	fseek(filePtr, bitmapFileHeader.bfOffBits, SEEK_SET);
 
-	//Only incompressed 24 byte RGB is supported
+	// Only incompressed 24 byte RGB is supported
 	if (bitmapInfoHeader->biCompression != BI_RGB || bitmapInfoHeader->biBitCount != 24)
 	{
 		return nullptr;
@@ -203,10 +204,10 @@ unsigned char *LoadBitmapFile(const char *filename, BITMAPINFOHEADER *bitmapInfo
 		bitmapInfoHeader->biSizeImage = 3 * bitmapInfoHeader->biHeight * bitmapInfoHeader->biHeight;
 	}
 
-	//allocate enough memory for the bitmap image data
-	bitmapImage = (unsigned char*)malloc(bitmapInfoHeader->biSizeImage);
+	// allocate enough memory for the bitmap image data
+	bitmapImage = (unsigned char *)malloc(bitmapInfoHeader->biSizeImage);
 
-	//verify memory allocation
+	// verify memory allocation
 	if (!bitmapImage)
 	{
 		free(bitmapImage);
@@ -214,17 +215,17 @@ unsigned char *LoadBitmapFile(const char *filename, BITMAPINFOHEADER *bitmapInfo
 		return NULL;
 	}
 
-	//read in the bitmap image data
+	// read in the bitmap image data
 	fread(bitmapImage, sizeof(uint8_t), bitmapInfoHeader->biSizeImage, filePtr);
 
-	//make sure bitmap image data was read
+	// make sure bitmap image data was read
 	if (bitmapImage == NULL)
 	{
 		fclose(filePtr);
 		return NULL;
 	}
 
-	//swap the r and b values to get RGB (bitmap is BGR)
+	// swap the r and b values to get RGB (bitmap is BGR)
 	if (bitmapInfoHeader->biBitCount > 1)
 	{
 		for (uint32_t imageIdx = 0; imageIdx < bitmapInfoHeader->biSizeImage; imageIdx += 3) // fixed semicolon
@@ -235,7 +236,7 @@ unsigned char *LoadBitmapFile(const char *filename, BITMAPINFOHEADER *bitmapInfo
 		}
 	}
 
-	//close file and return bitmap iamge data
+	// close file and return bitmap iamge data
 	fclose(filePtr);
 	return bitmapImage;
 }
@@ -263,39 +264,67 @@ bool initPhysX()
 		std::cerr << "Can't create Cooking" << std::endl;
 		return false;
 	}
-	
+
 	return true;
 }
 
-int main(int argc, const char* const* argv)
+int main(int argc, const char *const *argv)
 {
 	// set blast global error callback
 	// overriding default one in order to exit tool in profile/release configuration too (and write to stderr)
 	class CustomErrorCallback : public ErrorCallback
 	{
-		virtual void reportError(ErrorCode::Enum code, const char* msg, const char* file, int line) override
+		virtual void reportError(ErrorCode::Enum code, const char *msg, const char *file, int line) override
 		{
 			std::stringstream str;
 			bool critical = false;
 			switch (code)
 			{
-			case ErrorCode::eNO_ERROR:			str << "[Info]";				critical = false; break;
-			case ErrorCode::eDEBUG_INFO:		str << "[Debug Info]";			critical = false; break;
-			case ErrorCode::eDEBUG_WARNING:		str << "[Debug Warning]";		critical = false; break;
-			case ErrorCode::eINVALID_PARAMETER:	str << "[Invalid Parameter]";	critical = true;  break;
-			case ErrorCode::eINVALID_OPERATION:	str << "[Invalid Operation]";	critical = true;  break;
-			case ErrorCode::eOUT_OF_MEMORY:		str << "[Out of] Memory";		critical = true;  break;
-			case ErrorCode::eINTERNAL_ERROR:	str << "[Internal Error]";		critical = true;  break;
-			case ErrorCode::eABORT:				str << "[Abort]";				critical = true;  break;
-			case ErrorCode::ePERF_WARNING:		str << "[Perf Warning]";		critical = false; break;
-			default:							NVBLAST_ASSERT(false);
+			case ErrorCode::eNO_ERROR:
+				str << "[Info]";
+				critical = false;
+				break;
+			case ErrorCode::eDEBUG_INFO:
+				str << "[Debug Info]";
+				critical = false;
+				break;
+			case ErrorCode::eDEBUG_WARNING:
+				str << "[Debug Warning]";
+				critical = false;
+				break;
+			case ErrorCode::eINVALID_PARAMETER:
+				str << "[Invalid Parameter]";
+				critical = true;
+				break;
+			case ErrorCode::eINVALID_OPERATION:
+				str << "[Invalid Operation]";
+				critical = true;
+				break;
+			case ErrorCode::eOUT_OF_MEMORY:
+				str << "[Out of] Memory";
+				critical = true;
+				break;
+			case ErrorCode::eINTERNAL_ERROR:
+				str << "[Internal Error]";
+				critical = true;
+				break;
+			case ErrorCode::eABORT:
+				str << "[Abort]";
+				critical = true;
+				break;
+			case ErrorCode::ePERF_WARNING:
+				str << "[Perf Warning]";
+				critical = false;
+				break;
+			default:
+				NVBLAST_ASSERT(false);
 			}
 #if NV_DEBUG || NV_CHECKED
 			str << file << "(" << line << "): ";
-#else 
+#else
 			NV_UNUSED(file);
 			NV_UNUSED(line);
-#endif				
+#endif
 			str << " " << msg << "\n";
 			std::cerr << str.str();
 
@@ -325,7 +354,7 @@ int main(int argc, const char* const* argv)
 	cmd.add(cleanArg);
 
 	// The output modes
-	//NOTE: Fun TCLAP quirk here - if you set the default to true and specify this switch on the command line, the value will be false!
+	// NOTE: Fun TCLAP quirk here - if you set the default to true and specify this switch on the command line, the value will be false!
 	TCLAP::SwitchArg pxOutputArg("", "px", "Output ExtPxAsset to the .blast file in the output directory.", false);
 	cmd.add(pxOutputArg);
 
@@ -338,8 +367,8 @@ int main(int argc, const char* const* argv)
 	TCLAP::SwitchArg fbxAsciiArg("", "fbxascii", "Output FBX as an ascii file (defaults to binary output)", false);
 	cmd.add(fbxAsciiArg);
 
- 	TCLAP::SwitchArg objOutputArg("", "obj", "Output a OBJ mesh to the output directory", false);
- 	cmd.add(objOutputArg);
+	TCLAP::SwitchArg objOutputArg("", "obj", "Output a OBJ mesh to the output directory", false);
+	cmd.add(objOutputArg);
 
 	TCLAP::SwitchArg fbxOutputArg("", "fbx", "Output a FBX mesh to the output directory", false);
 	cmd.add(fbxOutputArg);
@@ -357,10 +386,12 @@ int main(int argc, const char* const* argv)
 	cmd.add(interiorMatId);
 
 	TCLAP::ValueArg<unsigned char> fracturingMode("", "mode", "Fracturing mode", false, 'v',
-		"v - voronoi, c - clustered voronoi, s - slicing, p - plane cut, u - cutout, i - chunks from islands.");
+												  "v - voronoi, c - clustered voronoi, s - slicing, p - plane cut, u - cutout, i - chunks from islands.");
 	cmd.add(fracturingMode);
 	TCLAP::ValueArg<uint32_t> cellsCount("", "cells", "Voronoi cells count", false, 5, "by default 5");
 	cmd.add(cellsCount);
+	TCLAP::ValueArg<uint32_t> minDistance("", "mindistance", "Minimal cells distance", false, 1, "by default 1");
+	cmd.add(minDistance);
 	TCLAP::ValueArg<uint32_t> clusterCount("", "clusters", "Uniform Voronoi cluster count", false, 5, "by default 5");
 	cmd.add(clusterCount);
 	TCLAP::ValueArg<float> clusterRad("", "radius", "Clustered Voronoi cluster radius", false, 1.0f, "by default 1.0");
@@ -379,7 +410,7 @@ int main(int argc, const char* const* argv)
 	cmd.add(point);
 
 	TCLAP::ValueArg<TCLAPfloat3> normal("", "normal", "Plane surface normal", false, TCLAPfloat3(1, 0, 0), "by default 1 0 0");
-    cmd.add(normal);
+	cmd.add(normal);
 
 	TCLAP::ValueArg<std::string> cutoutBitmapPath("", "cutoutBitmap", "Path to *.bmp file with cutout bitmap", false, ".", "by defualt empty");
 	cmd.add(cutoutBitmapPath);
@@ -392,7 +423,7 @@ int main(int argc, const char* const* argv)
 		// parse cmd input
 		cmd.parse(argc, argv);
 	}
-	catch (TCLAP::ArgException &e)  // catch any exceptions
+	catch (TCLAP::ArgException &e) // catch any exceptions
 	{
 		std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl;
 		return -1;
@@ -407,7 +438,7 @@ int main(int argc, const char* const* argv)
 	}
 
 	std::string outDir;
-	
+
 	std::cout << "Input file: " << infile << std::endl;
 
 	if (outDirArg.isSet())
@@ -433,7 +464,7 @@ int main(int argc, const char* const* argv)
 		}
 		else
 		{
-			outDir = infile.substr(0, idx);		
+			outDir = infile.substr(0, idx);
 		}
 	}
 	std::cout << "Output directory: " << outDir << std::endl;
@@ -443,12 +474,12 @@ int main(int argc, const char* const* argv)
 
 	auto idx = infile.rfind('.');
 	std::string extension;
-	
 
 	if (idx != std::string::npos)
 	{
 		extension = infile.substr(idx + 1);
-		std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) -> unsigned char { return (unsigned char)std::toupper(c); });
+		std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) -> unsigned char
+					   { return (unsigned char)std::toupper(c); });
 	}
 	else
 	{
@@ -471,7 +502,7 @@ int main(int argc, const char* const* argv)
 		std::cout << "Didn't specify an output format on the command line. Use default: LL Blast asset (NvBlastAsset)." << std::endl;
 		bOutputLL = true;
 	}
-	else if	((int)bOutputPX + (int)bOutputTK + (int)bOutputLL > 1)
+	else if ((int)bOutputPX + (int)bOutputTK + (int)bOutputLL > 1)
 	{
 		std::cerr << "More than one of the --ll, --tk, and --px options are set. Choose one. " << std::endl;
 		return -1;
@@ -486,20 +517,22 @@ int main(int argc, const char* const* argv)
 
 	std::shared_ptr<IMeshFileReader> fileReader;
 
-	if (extension.compare("FBX")==0)
+	if (extension.compare("FBX") == 0)
 	{
-		fileReader = std::shared_ptr<IMeshFileReader>(NvBlastExtExporterCreateFbxFileReader(), [](IMeshFileReader* p) {p->release(); });
+		fileReader = std::shared_ptr<IMeshFileReader>(NvBlastExtExporterCreateFbxFileReader(), [](IMeshFileReader *p)
+													  { p->release(); });
 	}
-	else if (extension.compare("OBJ")==0)
+	else if (extension.compare("OBJ") == 0)
 	{
-		fileReader = std::shared_ptr<IMeshFileReader>(NvBlastExtExporterCreateObjFileReader(), [](IMeshFileReader* p) {p->release(); });
+		fileReader = std::shared_ptr<IMeshFileReader>(NvBlastExtExporterCreateObjFileReader(), [](IMeshFileReader *p)
+													  { p->release(); });
 	}
 	else
 	{
 		std::cout << "Unsupported file extension " << extension << std::endl;
 		return -1;
 	}
-	
+
 	// Load the asset
 	fileReader->loadFromFile(infile.c_str());
 
@@ -512,24 +545,24 @@ int main(int argc, const char* const* argv)
 	_CrtMemState _ms;
 	_CrtMemCheckpoint(&_ms);
 #endif
-	
+
 	if (!initPhysX())
 	{
 		std::cerr << "Failed to initialize PhysX" << std::endl;
 		return -1;
 	}
-	Nv::Blast::FractureTool* fTool = NvBlastExtAuthoringCreateFractureTool();
+	Nv::Blast::FractureTool *fTool = NvBlastExtAuthoringCreateFractureTool();
 
-	NvcVec3* pos = fileReader->getPositionArray();
-	NvcVec3* norm = fileReader->getNormalsArray();
-	NvcVec2* uv = fileReader->getUvArray();
+	NvcVec3 *pos = fileReader->getPositionArray();
+	NvcVec3 *norm = fileReader->getNormalsArray();
+	NvcVec2 *uv = fileReader->getUvArray();
 
-	Nv::Blast::Mesh* mesh = NvBlastExtAuthoringCreateMesh(pos, norm, uv, vcount, fileReader->getIndexArray(), fileReader->getIndicesCount());
+	Nv::Blast::Mesh *mesh = NvBlastExtAuthoringCreateMesh(pos, norm, uv, vcount, fileReader->getIndexArray(), fileReader->getIndicesCount());
 
 	if (cleanArg.isSet())
 	{
-		MeshCleaner* clr = NvBlastExtAuthoringCreateMeshCleaner();
-		Nv::Blast::Mesh* nmesh;
+		MeshCleaner *clr = NvBlastExtAuthoringCreateMeshCleaner();
+		Nv::Blast::Mesh *nmesh;
 		nmesh = clr->cleanMesh(mesh);
 		clr->release();
 		mesh->release();
@@ -550,7 +583,7 @@ int main(int argc, const char* const* argv)
 	SimpleRandomGenerator rng;
 	rng.seed(random_number);
 
-	Nv::Blast::VoronoiSitesGenerator* voronoiSitesGenerator = NvBlastExtAuthoringCreateVoronoiSitesGenerator(mesh, &rng);
+	Nv::Blast::VoronoiSitesGenerator *voronoiSitesGenerator = NvBlastExtAuthoringCreateVoronoiSitesGenerator(mesh, &rng);
 	if (voronoiSitesGenerator == nullptr)
 	{
 		std::cerr << "Failed to create Voronoi sites generator" << std::endl;
@@ -561,144 +594,144 @@ int main(int argc, const char* const* argv)
 
 	switch (fracturingMode.getValue())
 	{
-		case 'i':
+	case 'i':
+	{
+		std::cout << "Generate chunks from islands..." << std::endl;
+		fTool->islandDetectionAndRemoving(0, true);
+		break;
+	}
+	case 'v':
+	{
+		std::cout << "Fracturing with Voronoi..." << std::endl;
+		voronoiSitesGenerator->uniformlyGenerateSitesInMesh(cellsCount.getValue(), minDistance.getValue());
+		const NvcVec3 *sites = nullptr;
+		uint32_t sitesCount = voronoiSitesGenerator->getVoronoiSites(sites);
+		if (fTool->voronoiFracturing(0, sitesCount, sites, false) != 0)
 		{
-			std::cout << "Generate chunks from islands..." << std::endl;
-			fTool->islandDetectionAndRemoving(0, true);
-			break;
-		}
-		case 'v':
-		{
-			std::cout << "Fracturing with Voronoi..." << std::endl;
-			voronoiSitesGenerator->uniformlyGenerateSitesInMesh(cellsCount.getValue());
-			const NvcVec3* sites = nullptr;
-			uint32_t sitesCount = voronoiSitesGenerator->getVoronoiSites(sites);
-			if (fTool->voronoiFracturing(0, sitesCount, sites, false) != 0)
-			{
-				std::cerr << "Failed to fracture with Voronoi" << std::endl;
-				return -1;
-			}
-			break;
-		}
-		case 'c':
-		{
-			std::cout << "Fracturing with Clustered Voronoi..." << std::endl;
-			voronoiSitesGenerator->clusteredSitesGeneration(cellsCount.getValue(), clusterCount.getValue(), clusterRad.getValue());
-			const NvcVec3* sites = nullptr;
-			uint32_t sitesCount = voronoiSitesGenerator->getVoronoiSites(sites);
-			if (fTool->voronoiFracturing(0, sitesCount, sites, false) != 0)
-			{
-				std::cerr << "Failed to fracture with Clustered Voronoi" << std::endl;
-				return -1;
-			}
-			break;
-		}
-		case 's':
-		{
-			std::cout << "Fracturing with Slicing..." << std::endl;
-			SlicingConfiguration slConfig;
-			slConfig.x_slices = slicingNumber.getValue().x;
-			slConfig.y_slices = slicingNumber.getValue().y;
-			slConfig.z_slices = slicingNumber.getValue().z;
-			slConfig.angle_variations = angleVariation.getValue();
-			slConfig.offset_variations = offsetVariation.getValue();
-			if (fTool->slicing(0, slConfig, false, &rng) != 0)
-			{
-				std::cerr << "Failed to fracture with Slicing" << std::endl;
-				return -1;
-			}
-			break;
-		}
-		case 'p':
-		{
-			std::cout << "Plane cut fracturing..." << std::endl;
-			NoiseConfiguration noise;
-			if (fTool->cut(0, normal.getValue(), point.getValue(), noise, false, &rng) != 0)
-			{
-				std::cerr << "Failed to fracture with Cutout (in half-space, plane cut)" << std::endl;
-				return -1;
-			}
-			break;
-		}
-		case 'u':
-		{
-			std::cout << "Cutout fracturing..." << std::endl;
-			CutoutConfiguration cutoutConfig;
-			physx::PxVec3 axis = normal.getValue();
-			if (axis.isZero())
-			{
-				axis = PxVec3(0.f, 0.f, 1.f);
-			}
-			axis.normalize();
-			float d = axis.dot(physx::PxVec3(0.f, 0.f, 1.f));
-		    physx::PxQuat q;
-			if (d < (1e-6f - 1.0f))
-			{
-				q = physx::PxQuat(physx::PxPi, PxVec3(1.f, 0.f, 0.f));
-			}
-			else if (d < 1.f)
-			{
-				float s = physx::PxSqrt((1 + d) * 2);
-				float invs = 1 / s;
-				auto c = axis.cross(PxVec3(0.f, 0.f, 1.f));
-				q = {c.x * invs, c.y * invs, c.z * invs, s * 0.5f};
-				q.normalize();
-			}
-		    cutoutConfig.transform.q = reinterpret_cast<NvcQuat&>(q);
-			cutoutConfig.transform.p = point.getValue();
-			if (cutoutBitmapPath.isSet())
-			{
-				BITMAPINFOHEADER header;
-				uint8_t* bitmap = LoadBitmapFile(cutoutBitmapPath.getValue().c_str(), &header);
-				if (bitmap != nullptr)
-				{
-					cutoutConfig.cutoutSet = NvBlastExtAuthoringCreateCutoutSet();
-					NvBlastExtAuthoringBuildCutoutSet(*cutoutConfig.cutoutSet, bitmap, header.biWidth, header.biHeight, 0.001f, 1.f, false, true);
-				}
-			}
-			if (fTool->cutout(0, cutoutConfig, false, &rng) != 0)
-			{
-				std::cerr << "Failed to fracture with Cutout" << std::endl;
-				return -1;
-			}
-			break;
-		}
-		default:
-			std::cerr << "Unknown mode" << std::endl;
+			std::cerr << "Failed to fracture with Voronoi" << std::endl;
 			return -1;
+		}
+		break;
+	}
+	case 'c':
+	{
+		std::cout << "Fracturing with Clustered Voronoi..." << std::endl;
+		voronoiSitesGenerator->clusteredSitesGeneration(cellsCount.getValue(), clusterCount.getValue(), clusterRad.getValue());
+		const NvcVec3 *sites = nullptr;
+		uint32_t sitesCount = voronoiSitesGenerator->getVoronoiSites(sites);
+		if (fTool->voronoiFracturing(0, sitesCount, sites, false) != 0)
+		{
+			std::cerr << "Failed to fracture with Clustered Voronoi" << std::endl;
+			return -1;
+		}
+		break;
+	}
+	case 's':
+	{
+		std::cout << "Fracturing with Slicing..." << std::endl;
+		SlicingConfiguration slConfig;
+		slConfig.x_slices = slicingNumber.getValue().x;
+		slConfig.y_slices = slicingNumber.getValue().y;
+		slConfig.z_slices = slicingNumber.getValue().z;
+		slConfig.angle_variations = angleVariation.getValue();
+		slConfig.offset_variations = offsetVariation.getValue();
+		if (fTool->slicing(0, slConfig, false, &rng) != 0)
+		{
+			std::cerr << "Failed to fracture with Slicing" << std::endl;
+			return -1;
+		}
+		break;
+	}
+	case 'p':
+	{
+		std::cout << "Plane cut fracturing..." << std::endl;
+		NoiseConfiguration noise;
+		if (fTool->cut(0, normal.getValue(), point.getValue(), noise, false, &rng) != 0)
+		{
+			std::cerr << "Failed to fracture with Cutout (in half-space, plane cut)" << std::endl;
+			return -1;
+		}
+		break;
+	}
+	case 'u':
+	{
+		std::cout << "Cutout fracturing..." << std::endl;
+		CutoutConfiguration cutoutConfig;
+		physx::PxVec3 axis = normal.getValue();
+		if (axis.isZero())
+		{
+			axis = PxVec3(0.f, 0.f, 1.f);
+		}
+		axis.normalize();
+		float d = axis.dot(physx::PxVec3(0.f, 0.f, 1.f));
+		physx::PxQuat q;
+		if (d < (1e-6f - 1.0f))
+		{
+			q = physx::PxQuat(physx::PxPi, PxVec3(1.f, 0.f, 0.f));
+		}
+		else if (d < 1.f)
+		{
+			float s = physx::PxSqrt((1 + d) * 2);
+			float invs = 1 / s;
+			auto c = axis.cross(PxVec3(0.f, 0.f, 1.f));
+			q = {c.x * invs, c.y * invs, c.z * invs, s * 0.5f};
+			q.normalize();
+		}
+		cutoutConfig.transform.q = reinterpret_cast<NvcQuat &>(q);
+		cutoutConfig.transform.p = point.getValue();
+		if (cutoutBitmapPath.isSet())
+		{
+			BITMAPINFOHEADER header;
+			uint8_t *bitmap = LoadBitmapFile(cutoutBitmapPath.getValue().c_str(), &header);
+			if (bitmap != nullptr)
+			{
+				cutoutConfig.cutoutSet = NvBlastExtAuthoringCreateCutoutSet();
+				NvBlastExtAuthoringBuildCutoutSet(*cutoutConfig.cutoutSet, bitmap, header.biWidth, header.biHeight, 0.001f, 1.f, false, true);
+			}
+		}
+		if (fTool->cutout(0, cutoutConfig, false, &rng) != 0)
+		{
+			std::cerr << "Failed to fracture with Cutout" << std::endl;
+			return -1;
+		}
+		break;
+	}
+	default:
+		std::cerr << "Unknown mode" << std::endl;
+		return -1;
 	}
 	voronoiSitesGenerator->release();
 	mesh->release();
-	
-	Nv::Blast::ExtPxCollisionBuilder* collisionBuilder = ExtPxManager::createCollisionBuilder(*gPhysics, *gCooking);
-	Nv::Blast::BlastBondGenerator* bondGenerator   = NvBlastExtAuthoringCreateBondGenerator(collisionBuilder);
-	
+
+	Nv::Blast::ExtPxCollisionBuilder *collisionBuilder = ExtPxManager::createCollisionBuilder(*gPhysics, *gCooking);
+	Nv::Blast::BlastBondGenerator *bondGenerator = NvBlastExtAuthoringCreateBondGenerator(collisionBuilder);
+
 	Nv::Blast::ConvexDecompositionParams collisionParameter;
 	collisionParameter.maximumNumberOfHulls = aggregateMaxCount.getValue() > 0 ? aggregateMaxCount.getValue() : 1;
 	collisionParameter.voxelGridResolution = 0;
-	Nv::Blast::AuthoringResult* result = NvBlastExtAuthoringProcessFracture(*fTool, *bondGenerator, *collisionBuilder, collisionParameter);
+	Nv::Blast::AuthoringResult *result = NvBlastExtAuthoringProcessFracture(*fTool, *bondGenerator, *collisionBuilder, collisionParameter);
 	auto tk = NvBlastTkFrameworkCreate();
 
 	bondGenerator->release();
 	fTool->release();
 
 	// Output the results
-	// NOTE: Writing to FBX by default. 
+	// NOTE: Writing to FBX by default.
 
-	std::vector<const char*> matNames;
+	std::vector<const char *> matNames;
 	for (int32_t i = 0; i < fileReader->getMaterialCount(); ++i)
 	{
 		matNames.push_back(fileReader->getMaterialName(i));
 	}
 	result->materialNames = matNames.data();
 	result->materialCount = static_cast<uint32_t>(matNames.size());
-	
+
 	const std::string assetNameFull = outDir + "\\" + assetName;
 
 	if (jsonCollision.isSet())
 	{
 		const std::string fullJsonFilename = assetNameFull + ".json";
-		IJsonCollisionExporter* collisionExporter = NvBlastExtExporterCreateJsonCollisionExporter();
+		IJsonCollisionExporter *collisionExporter = NvBlastExtExporterCreateJsonCollisionExporter();
 		if (collisionExporter != nullptr)
 		{
 			if (collisionExporter->writeCollision(fullJsonFilename.c_str(), result->chunkCount, result->collisionHullOffset, result->collisionHull))
@@ -720,12 +753,13 @@ int main(int argc, const char* const* argv)
 
 	if (bOutputObjFile)
 	{
-		std::shared_ptr<IMeshFileWriter> fileWriter(NvBlastExtExporterCreateObjFileWriter(), [](IMeshFileWriter* p) {p->release(); });
+		std::shared_ptr<IMeshFileWriter> fileWriter(NvBlastExtExporterCreateObjFileWriter(), [](IMeshFileWriter *p)
+													{ p->release(); });
 		if (interiorMatId.isSet() && interiorMatId.getValue() >= 0)
-		if (!fbxCollision.isSet())
-		{
-			fileWriter->setInteriorIndex(interiorMatId.getValue());
-		}
+			if (!fbxCollision.isSet())
+			{
+				fileWriter->setInteriorIndex(interiorMatId.getValue());
+			}
 		fileWriter->appendMesh(*result, assetName.c_str());
 		if (!fileWriter->saveToFile(assetName.c_str(), outDir.c_str()))
 		{
@@ -736,7 +770,8 @@ int main(int argc, const char* const* argv)
 	}
 	if (bOutputFbxFile)
 	{
-		std::shared_ptr<IMeshFileWriter> fileWriter(NvBlastExtExporterCreateFbxFileWriter(bOutputFBXAscii), [](IMeshFileWriter* p) {p->release(); });
+		std::shared_ptr<IMeshFileWriter> fileWriter(NvBlastExtExporterCreateFbxFileWriter(bOutputFBXAscii), [](IMeshFileWriter *p)
+													{ p->release(); });
 		if (interiorMatId.isSet() && interiorMatId.getValue() >= 0)
 		{
 			fileWriter->setInteriorIndex(interiorMatId.getValue());
@@ -756,8 +791,8 @@ int main(int argc, const char* const* argv)
 			std::cout << "Exported render mesh geometry: " << assetNameFull << ".fbx" << std::endl;
 		}
 	}
-	
-	auto saveBlastData = [&](BlastDataExporter& blExpr)
+
+	auto saveBlastData = [&](BlastDataExporter &blExpr)
 	{
 		if (bOutputLL)
 		{
@@ -776,7 +811,7 @@ int main(int argc, const char* const* argv)
 			std::vector<ExtPxChunk> physicsChunks(result->chunkCount);
 			std::vector<ExtPxSubchunk> physicsSubchunks(result->chunkCount);
 			collisionBuilder->buildPhysicsChunks(result->chunkCount, result->collisionHullOffset, result->collisionHull, physicsChunks.data(), physicsSubchunks.data());
-			Nv::Blast::ExtPxAsset* physicsAsset = Nv::Blast::ExtPxAsset::create(descriptor, physicsChunks.data(), physicsSubchunks.data(), *NvBlastTkFrameworkGet());
+			Nv::Blast::ExtPxAsset *physicsAsset = Nv::Blast::ExtPxAsset::create(descriptor, physicsChunks.data(), physicsSubchunks.data(), *NvBlastTkFrameworkGet());
 			if (bOutputTK)
 			{
 				blExpr.saveBlastObject(outDir, assetName, &physicsAsset->getTkAsset(), TkObjectTypeID::Asset);
@@ -790,7 +825,7 @@ int main(int argc, const char* const* argv)
 			physicsAsset->release();
 		}
 	};
-	
+
 	BlastDataExporter blExpr(NvBlastTkFrameworkGet(), gPhysics, gCooking);
 	saveBlastData(blExpr);
 
@@ -812,7 +847,7 @@ int main(int argc, const char* const* argv)
 	if (gFoundation)
 	{
 		gFoundation->release();
-	}	
+	}
 
 	std::cout << "Success!" << std::endl;
 
